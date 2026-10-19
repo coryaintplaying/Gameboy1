@@ -8,7 +8,7 @@ https://chatgpt.com/share/6ad0c2f2-d288-83ec-a488-e43d31a80c58
 3. Racing Game https://github.com/adidax/oled-retro-pixel-racer
 
 oled links:
-https://www.youtube.com/watch?v=HVHVkKt-ldc   16:49
+https://www.youtube.com/watch?v=HVHVkKt-ldc   16:48
 https://www.youtube.com/watch?v=vHRyj3e3ZTU   
 https://www.youtube.com/watch?v=0JuH5_lv8BE
 */
