@@ -7,7 +7,7 @@
 3. Racing Game https://github.com/adidax/oled-retro-pixel-racer
 
 oled links:
-https://www.youtube.com/watch?v=HVHVkKt-ldc   20:43
+https://www.youtube.com/watch?v=HVHVkKt-ldc   24:26
 https://www.youtube.com/watch?v=vHRyj3e3ZTU   
 https://www.youtube.com/watch?v=0JuH5_lv8BE
 */
