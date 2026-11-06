@@ -77,6 +77,9 @@ int down_clicked = 1;
 #define JOYSTICK_B A2 //button pin
 #define ANALOG_X_CORRECTION 128 
 #define ANALOG_Y_CORRECTION 128 
+int currentMenuIndex = 0;
+
+
 
 const unsigned char* bitmap_icons[3] = {
 	bird_icon,
@@ -85,11 +88,40 @@ const unsigned char* bitmap_icons[3] = {
 };
 
 
+
 char menu_items[number_items] [20] = {
 	{"Bird"},
 	{"Car"},
 	{"Snake"}
 };
+
+
+
+// Define a structure to hold the icon configuration
+struct Icon {
+  const unsigned char* bitmap;
+  uint8_t width;
+  uint8_t height;
+};
+
+
+
+// Create an array mapping each icon to its custom dimensions
+Icon menuIcons[] = {
+  { bird_icon,  14, 13 }, // Index 0: Bird
+  { car_icon,   14, 12 }, // Index 1: Car
+  { snake_icon, 14, 14 }  // Index 2: Snake
+};
+
+
+
+void draw(int itemIndex1, uint8_t iconYcood, uint8_t textYcood) {
+  u8g.drawStr(24, textYcood, menu_items[itemIndex1]);
+
+  uint8_t byteWidth = (menuIcons[itemIndex1].width + 7) / 8;
+  u8g.drawBitmapP(4, iconYcood, byteWidth, menuIcons[itemIndex1].height, 
+  menuIcons[itemIndex1].bitmap);
+}
 
 
 
@@ -104,7 +136,6 @@ void setup(){
     u8g.setFont(u8g_font_courB14);
     u8g.drawStr(30, 37, "Gameb0y"); 
   } while (u8g.nextPage());
-
   delay(2000);
 }
 
@@ -131,11 +162,8 @@ void loop(){
     up_clicked=0;
   } 
   
-  if ((yVal < 850) && (down_clicked==0)) {  // reset Down
-    down_clicked=1;
-  if ((yVal > 150) && (up_clicked==0))  // reset UP
-    up_clicked=1;
-  } 
+  if ((yVal < 850) && (down_clicked==0)) {down_clicked=1;} //reset Down
+  if ((yVal > 150) && (up_clicked==0)) {up_clicked=1;} //reset UP 
   
   if (!bVal) {
     chosen_game=selected_item;
@@ -148,18 +176,15 @@ void loop(){
   do {
     // previous item
     u8g.setFont(u8g_font_7x13);
-    u8g.drawStr(24,16,menu_items[prev_selected_item]);
-    u8g.drawBitmapP(4, 4, 16/8, 13, bitmap_icons[prev_selected_item]);
+    draw(prev_selected_item, 4, 16);
 
     //selected item
     u8g.setFont(u8g_font_7x13B);
-    u8g.drawStr(24,37,menu_items[selected_item]);
-    u8g.drawBitmapP(4, 26, 16/8, 12, bitmap_icons[selected_item]);
- 
+    draw(selected_item, 26, 37);
+
     //next item    
     u8g.setFont(u8g_font_7x13);
-    u8g.drawStr(24,58,menu_items[next_selected_item]);
-    u8g.drawBitmapP(4, 47, 16/8, 14, bitmap_icons[next_selected_item]);
+    draw(next_selected_item, 47, 58);
 
 		u8g.drawBitmapP(0, 22, 120/8, 21, scrolloutline);
     u8g.drawBitmapP(125, 0, 8/8, 64, scrollbar);
@@ -175,89 +200,5 @@ void loop(){
 /*
 
 1.Fix scroll bar  
-
-// ====================================================
-// ===================== GPT===========================
-// ====================================================
-To dynamically adjust the width and height parameters of drawBitmap based on the selected icon, you can group your icon data, width, and height into an array of custom struct elements.
-This structure links each bitmap array with its specific dimensions. You can then look them up dynamically using a single index variable.
-Here is how you can restructure your code to achieve this:
-
-The Solution
-
-cpp
-#include "U8glib.h"
-#include <Wire.h>
-
-U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_DEV_0 | U8G_I2C_OPT_NO_ACK | U8G_I2C_OPT_FAST);
-
-// ====================================================
-// ========================ICONS BITMAP DATA ==========
-// ====================================================
-const unsigned char bird_icon [] PROGMEM = {
-  0x3e, 0x00, 0x41, 0x00, 0x91, 0x00, 0xc0, 0x80, 0x40, 0x40, 0x40, 0x40, 0x90, 0x20, 0x90, 0x20, 
-  0x88, 0x10, 0x44, 0x08, 0x32, 0x7c, 0x0d, 0x80, 0x1b, 0x00
-};
-
-const unsigned char car_icon [] PROGMEM = {
-  0x03, 0xc0, 0x04, 0x20, 0x08, 0x10, 0x08, 0x10, 0x73, 0xf8, 0xa0, 0x04, 0xe0, 0x04, 0x80, 0x04, 
-  0xb7, 0x68, 0x48, 0x90, 0x48, 0x90, 0x30, 0x60
-};
-
-const unsigned char snake_icon [] PROGMEM = {
-  0x71, 0xc0, 0x8a, 0x30, 0xda, 0x18, 0x8b, 0x8c, 0x88, 0xc4, 0x88, 0x64, 0xcc, 0x24, 0x44, 0x24, 
-  0x44, 0x24, 0x44, 0x64, 0x47, 0xc4, 0x40, 0x04, 0x40, 0x04, 0x7f, 0xf8
-};
-
-// ====================================================================
-// ==================STRUCT FOR CUSTOM VALUES =========================
-// ====================================================================
-// Define a structure to hold the icon configuration
-struct Icon {
-  const unsigned char* bitmap;
-  uint8_t width;
-  uint8_t height;
-};
-
-// Create an array mapping each icon to its custom dimensions
-Icon menuIcons[] = {
-  { bird_icon,  14, 13 }, // Index 0: Bird
-  { car_icon,   14, 12 }, // Index 1: Car
-  { snake_icon, 14, 14 }  // Index 2: Snake
-};
-
-// Tracking variable for the active menu item
-int currentMenuIndex = 0; 
-
-void draw(void) {
-  // Get the custom values for the current active icon
-  const unsigned char* currentBitmap = menuIcons[currentMenuIndex].bitmap;
-  uint8_t currentWidth = menuIcons[currentMenuIndex].width;
-  uint8_t currentHeight = menuIcons[currentMenuIndex].height;
-
-  // Calculate coordinates (e.g., to center them horizontally)
-  uint8_t xPos = 10; 
-  uint8_t yPos = 20;
-
-  // Render the bitmap using its dynamic constraints
-  // Note: U8glib uses byte width calculation: (width + 7) / 8
-  u8g.drawBitmapP(xPos, yPos, (currentWidth + 7) / 8, currentHeight, currentBitmap);
-}
-
-void setup(void) {
-  // Initialization logic here
-}
-
-void loop(void) {
-  // Picture loop
-  u8g.firstPage();  
-  do {
-    draw();
-  } while( u8g.nextPage() );
-
-  // Example: Cycle through menu icons every 2 seconds for testing
-  delay(2000);
-  currentMenuIndex = (currentMenuIndex + 1) % 3; 
-}
 
 */
