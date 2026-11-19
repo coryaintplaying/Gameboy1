@@ -22,8 +22,9 @@ https://www.youtube.com/watch?v=0JuH5_lv8BE
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
-
-U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_DEV_0 | U8G_I2C_OPT_NO_ACK | U8G_I2C_OPT_FAST);
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMono9pt7b.h>
+#include <Fonts/FreeMonoBold9pt7b.h>
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 //=========================================//
 
@@ -43,7 +44,7 @@ const int number_items = 3; //number of items
 int selected_item = 0; //which item is selected
 int prev_selected_item; //previous item before the selected item
 int next_selected_item; //next item after the selected item
-int chosen_game = 99;
+int chosen_game = -1;
 int up_clicked = 1;
 int down_clicked = 1;
 int snake_x[SNAKE_MAX_LENGTH];
@@ -53,31 +54,31 @@ int score = 0;
 int snake_dir = 0;  // 0 = right, 1 = up, 2 = left, 3 = down
 int food_x;
 int food_y;
+int xVal = analogRead(JOYSTICK_X);
+int yVal = analogRead(JOYSTICK_Y);
+bool bVal = digitalRead(JOYSTICK_B); 
 
 void setup() {
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  Serial.begin(9600);
+  Wire.begin();
+  pinMode(JOYSTICK_B, INPUT_PULLUP);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;);
+  }
+
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10,10);
-  display.println("WORKING");
+  display.setFont(&FreeMonoBold12pt7b);
+
+  display.setCursor(30,37); //30,37?
+  display.print("gameboy")
+
   display.display();
 
-
-
-  Serial.begin(9600);
-  Wire.begin();
-  u8g.setColorIndex(1); //(White)
-  pinMode(JOYSTICK_B, INPUT_PULLUP);
-
-  u8g.firstPage();
-  do {
-    u8g.setFont(u8g_font_courB14);
-    u8g.drawStr(30, 37, "Gameb0y"); 
-  } while (u8g.nextPage());
   delay(2000);
-
-
 
   //randomSeed(analogRead(0));
   food_x = random(0, display.width() / 8);
@@ -210,11 +211,7 @@ void draw(int itemIndex1, uint8_t iconYcood, uint8_t textYcood) {
 
 
 void loop() {
-  int xVal = analogRead(JOYSTICK_X);
-  int yVal = analogRead(JOYSTICK_Y);
-  bool bVal = digitalRead(JOYSTICK_B); 
-  
-  if (chosen_game==99) {
+  if (chosen_game==-1) {
   //=============================//
   //=============MENU============//
   //=============================//
@@ -246,15 +243,15 @@ void loop() {
     u8g.firstPage();
     do {
       // previous item
-      u8g.setFont(u8g_font_7x13);
+      display.setFont(&FreeMono9pt7b);
       draw(prev_selected_item, 4, 16);
 
       //selected item
-      u8g.setFont(u8g_font_7x13B);
+      display.setFont(&FreeMonoBold9pt7b);
       draw(selected_item, 26, 37);
 
       //next item    
-      u8g.setFont(u8g_font_7x13);
+      display.setFont(&FreeMono9pt7b);
       draw(next_selected_item, 47, 58);
 
       u8g.drawBitmapP(0, 22, 120/8, 21, scrolloutline);
@@ -280,6 +277,7 @@ void loop() {
     } else if (yVal < 150 && snake_dir != 3) {  // UP
       snake_dir = 1;
     }
+
     for (int i = snake_length - 1; i > 0; i--) {
       snake_x[i] = snake_x[i - 1];
       snake_y[i] = snake_y[i - 1];
